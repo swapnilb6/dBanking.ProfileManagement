@@ -1,0 +1,6 @@
+@dBanking.ProfileManagement_HostAddress = http://localhost:5221
+
+GET {{dBanking.ProfileManagement_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
