@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36717.8 d17.14
+VisualStudioVersion = 17.14.36717.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dBanking.ProfileManagement.API", "dBanking.ProfileManagement\dBanking.ProfileManagement.API.csproj", "{A2866F58-14A3-45FC-BAB5-D0E66A70A535}"
 EndProject
@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dBanking.ProfileManagement.Core", "dBanking.ProfileManagement.Core\dBanking.ProfileManagement.Core.csproj", "{E3930848-2887-4E21-AFC5-1D28B87CD4E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dBanking.ProfileManagement.Infrastructure", "dBanking.ProfileManagement.Infrastructure\dBanking.ProfileManagement.Infrastructure.csproj", "{57A80DA1-1C1B-4BC4-961D-D174B767FF76}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{E3930848-2887-4E21-AFC5-1D28B87CD4E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3930848-2887-4E21-AFC5-1D28B87CD4E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3930848-2887-4E21-AFC5-1D28B87CD4E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57A80DA1-1C1B-4BC4-961D-D174B767FF76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57A80DA1-1C1B-4BC4-961D-D174B767FF76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57A80DA1-1C1B-4BC4-961D-D174B767FF76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57A80DA1-1C1B-4BC4-961D-D174B767FF76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
