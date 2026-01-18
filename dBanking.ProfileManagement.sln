@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dBanking.ProfileManagement.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dBanking.ProfileManagement.Infrastructure", "dBanking.ProfileManagement.Infrastructure\dBanking.ProfileManagement.Infrastructure.csproj", "{57A80DA1-1C1B-4BC4-961D-D174B767FF76}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dBanking.ProfileManagement.API.Tests", "dBanking.ProfileManagement.API.Tests\dBanking.ProfileManagement.API.Tests.csproj", "{B2565DD6-5124-4D86-92E1-3876D69812D5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{57A80DA1-1C1B-4BC4-961D-D174B767FF76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57A80DA1-1C1B-4BC4-961D-D174B767FF76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57A80DA1-1C1B-4BC4-961D-D174B767FF76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2565DD6-5124-4D86-92E1-3876D69812D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2565DD6-5124-4D86-92E1-3876D69812D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2565DD6-5124-4D86-92E1-3876D69812D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2565DD6-5124-4D86-92E1-3876D69812D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

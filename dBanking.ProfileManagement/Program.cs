@@ -1,13 +1,15 @@
 using dBanking.ProfileManagement.API.Filters;
 using dBanking.ProfileManagement.API.Middleware;
 using dBanking.ProfileManagement.Core.Validators.Contacts;
+using dBanking.ProfileManagement.Infrastructure.DbContext;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using System.Threading.RateLimiting;
 
 
@@ -142,7 +144,10 @@ builder.Services.AddApiVersioning(o =>
     o.ReportApiVersions = true;
 });
 
-
+// PostgreSQL registration using AppPostgresDbContext
+// Make sure you have a connection string named "PostgresDB" in configuration
+builder.Services.AddDbContext<ProfileDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresAzureDb")));
 
 var app = builder.Build();
 
