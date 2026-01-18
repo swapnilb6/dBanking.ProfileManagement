@@ -15,17 +15,6 @@ namespace dBanking.ProfileManagement.Infrastructure
             IConfiguration configuration,
             string connectionStringName = "ProfileDb")
         {
-            var connStr = configuration.GetConnectionString(connectionStringName)!;
-
-            services.AddDbContext<ProfileDbContext>(options =>
-            {
-                options.UseNpgsql(connStr, npgsql =>
-                {
-                    npgsql.EnableRetryOnFailure(5);
-                });
-                options.UseSnakeCaseNamingConvention();
-            });
-
             // Repositories
             services.AddScoped<IProfileRepository, ProfileRepository>();
             services.AddScoped<IAddressRepository, AddressRepository>();

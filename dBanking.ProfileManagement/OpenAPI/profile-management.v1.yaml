@@ -1,0 +1,662 @@
+﻿
+openapi: 3.0.3
+info:
+  title: dBanking Profile Management API
+  version: 1.0.0
+  description: >
+    Manages customer contacts (with verification flows), addresses, and communication preferences.
+    All endpoints are scoped to a customer. Requires OAuth2/JWT (Azure AD). 
+    Change-request endpoints require Idempotency-Key header.
+
+servers:
+  - url: https://api.dbanking.local/profile
+    description: Local / Dev
+  - url: https://api.dbanking.bank.com/profile
+    description: Prod
+
+tags:
+  - name: Contacts
+  - name: Addresses
+  - name: Preferences
+  - name: Audit
+  - name: Health
+
+paths:
+  /profiles/{customerId}/contacts:
+    get:
+      tags: [Contacts]
+      summary: Get current and pending contact details
+      operationId: Contacts_Get
+      security:
+        - OAuth2: [profile.read]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Contact details
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactViewDto'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /profiles/{customerId}/contacts/email/change-request:
+    post:
+      tags: [Contacts]
+      summary: Initiate email change (sends verification link to new email)
+      operationId: Contacts_RequestEmailChange
+      security:
+        - OAuth2: [profile.write]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeEmailRequestDto'
+            examples:
+              default:
+                value:
+                  customerId: "11111111-1111-1111-1111-111111111111"
+                  newEmail: "new.email@example.com"
+                  sourceChannel: "Web"
+                  correlationId: "c0f2e7a8-req"
+                  reason: "Customer request"
+      responses:
+        '202':
+          description: Pending verification
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactChangeResultDto'
+        '400': { $ref: '#/components/responses/ValidationProblem' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: Conflict (email in use)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /profiles/{customerId}/contacts/email/verify:
+    post:
+      tags: [Contacts]
+      summary: Verify email change using token from verification link
+      operationId: Contacts_VerifyEmail
+      security:
+        - OAuth2: [profile.write]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VerifyEmailRequestDto' }
+            examples:
+              default:
+                value:
+                  customerId: "11111111-1111-1111-1111-111111111111"
+                  verificationToken: "raw-token-from-link"
+                  correlationId: "c0f2e7a8-ver"
+      responses:
+        '200':
+          description: Email verified and updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationResultDto' }
+        '400': { $ref: '#/components/responses/ValidationProblem' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '410':
+          description: Token expired
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /profiles/{customerId}/contacts/phone/change-request:
+    post:
+      tags: [Contacts]
+      summary: Initiate phone change (sends OTP to new phone)
+      operationId: Contacts_RequestPhoneChange
+      security:
+        - OAuth2: [profile.write]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangePhoneRequestDto' }
+            examples:
+              default:
+                value:
+                  customerId: "11111111-1111-1111-1111-111111111111"
+                  newPhoneE164: "+919876543210"
+                  sourceChannel: "MobileApp"
+                  correlationId: "ab12-corr"
+                  reason: "Customer request"
+      responses:
+        '202':
+          description: Pending verification
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactChangeResultDto' }
+        '400': { $ref: '#/components/responses/ValidationProblem' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: Conflict (phone in use)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /profiles/{customerId}/contacts/phone/verify:
+    post:
+      tags: [Contacts]
+      summary: Verify phone change using OTP
+      operationId: Contacts_VerifyPhone
+      security:
+        - OAuth2: [profile.write]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VerifyPhoneRequestDto' }
+            examples:
+              default:
+                value:
+                  customerId: "11111111-1111-1111-1111-111111111111"
+                  otpCode: "654321"
+                  correlationId: "ab12-verify"
+      responses:
+        '200':
+          description: Phone verified and updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationResultDto' }
+        '400': { $ref: '#/components/responses/ValidationProblem' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '410':
+          description: OTP expired
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /profiles/{customerId}/addresses:
+    get:
+      tags: [Addresses]
+      summary: Get all addresses for customer
+      operationId: Addresses_Get
+      security:
+        - OAuth2: [profile.read]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Addresses
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AddressDto' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+    post:
+      tags: [Addresses]
+      summary: Upsert (create if new) address for customer
+      operationId: Addresses_Upsert
+      security:
+        - OAuth2: [profile.write]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpsertAddressRequestDto' }
+      responses:
+        '200':
+          description: Address upserted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AddressDto' }
+        '400': { $ref: '#/components/responses/ValidationProblem' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /profiles/{customerId}/addresses/{addressId}:
+    put:
+      tags: [Addresses]
+      summary: Update an existing address
+      operationId: Addresses_Update
+      security:
+        - OAuth2: [profile.write]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - name: addressId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateAddressRequestDto' }
+      responses:
+        '200':
+          description: Address updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AddressDto' }
+        '400': { $ref: '#/components/responses/ValidationProblem' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /profiles/{customerId}/addresses/{addressId}/set-primary:
+    post:
+      tags: [Addresses]
+      summary: Set the specified address as primary
+      operationId: Addresses_SetPrimary
+      security:
+        - OAuth2: [profile.write]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - name: addressId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Primary address set
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationResultDto' }
+        '400': { $ref: '#/components/responses/ValidationProblem' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /profiles/{customerId}/preferences:
+    get:
+      tags: [Preferences]
+      summary: Get communication preferences
+      operationId: Preferences_Get
+      security:
+        - OAuth2: [profile.read]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Preferences
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PreferencesDto' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+    put:
+      tags: [Preferences]
+      summary: Update communication preferences
+      operationId: Preferences_Update
+      security:
+        - OAuth2: [profile.write]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdatePreferencesRequestDto' }
+      responses:
+        '200':
+          description: Preferences updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PreferencesDto' }
+        '400': { $ref: '#/components/responses/ValidationProblem' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /profiles/{customerId}/audit:
+    get:
+      tags: [Audit]
+      summary: Get audit trail for customer
+      operationId: Audit_Get
+      security:
+        - OAuth2: [profile.read]
+        - Bearer: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - name: entity
+          in: query
+          schema: { type: string, enum: [Contacts, Address, Preferences] }
+        - name: skip
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: take
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        '200':
+          description: Audit entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AuditEntryDto' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness/Readiness probe
+      operationId: Health_Check
+      responses:
+        '200':
+          description: Healthy
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token
+          scopes:
+            profile.read: Read profile data
+            profile.write: Modify profile data
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  headers:
+    CorrelationId:
+      description: Echoed correlation id
+      schema: { type: string }
+
+  parameters:
+    CustomerId:
+      name: customerId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema: { type: string, maxLength: 100 }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, maxLength: 80 }
+      description: Required for change-request endpoints to ensure idempotency.
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ValidationProblem:
+      description: Validation errors
+      content:
+        application/problem+json:
+          schema:
+            type: object
+            additionalProperties: true
+    TooManyRequests:
+      description: Too Many Requests (rate limit exceeded)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  schemas:
+    # ==== Contacts
+    ContactViewDto:
+      type: object
+      properties:
+        email: { type: string, nullable: true, maxLength: 254 }
+        emailStatus: { $ref: '#/components/schemas/ContactStatus' }
+        phoneE164: { type: string, nullable: true, maxLength: 20 }
+        phoneStatus: { $ref: '#/components/schemas/ContactStatus' }
+        pendingEmail: { type: string, nullable: true, maxLength: 254 }
+        pendingPhoneE164: { type: string, nullable: true, maxLength: 20 }
+
+    ContactStatus:
+      type: string
+      enum: [Unknown, PendingVerification, Verified]
+
+    ChangeEmailRequestDto:
+      type: object
+      required: [customerId, newEmail, sourceChannel]
+      properties:
+        customerId: { type: string, format: uuid }
+        newEmail: { type: string, format: email, maxLength: 254 }
+        correlationId: { type: string, nullable: true, maxLength: 100 }
+        sourceChannel: { type: string, maxLength: 20, example: Web }
+        reason: { type: string, nullable: true, maxLength: 200 }
+
+    VerifyEmailRequestDto:
+      type: object
+      required: [customerId, verificationToken]
+      properties:
+        customerId: { type: string, format: uuid }
+        verificationToken: { type: string, maxLength: 256 }
+        correlationId: { type: string, nullable: true, maxLength: 100 }
+
+    ChangePhoneRequestDto:
+      type: object
+      required: [customerId, newPhoneE164, sourceChannel]
+      properties:
+        customerId: { type: string, format: uuid }
+        newPhoneE164: { type: string, pattern: '^\\+[1-9]\\d{6,14}$', example: '+919876543210' }
+        correlationId: { type: string, nullable: true, maxLength: 100 }
+        sourceChannel: { type: string, maxLength: 20, example: MobileApp }
+        reason: { type: string, nullable: true, maxLength: 200 }
+
+    VerifyPhoneRequestDto:
+      type: object
+      required: [customerId, otpCode]
+      properties:
+        customerId: { type: string, format: uuid }
+        otpCode: { type: string, minLength: 4, maxLength: 10 }
+        correlationId: { type: string, nullable: true, maxLength: 100 }
+
+    ContactChangeResultDto:
+      type: object
+      properties:
+        success: { type: boolean }
+        status:
+          type: string
+          enum: [PendingVerification, Verified, Rejected]
+        message: { type: string }
+
+    # ==== Addresses
+    AddressDto:
+      type: object
+      properties:
+        addressId: { type: string, format: uuid }
+        addressType: { $ref: '#/components/schemas/AddressType' }
+        line1: { type: string, maxLength: 200 }
+        line2: { type: string, nullable: true, maxLength: 200 }
+        line3: { type: string, nullable: true, maxLength: 200 }
+        city: { type: string, maxLength: 100 }
+        stateProvince: { type: string, maxLength: 100 }
+        postalCode: { type: string, maxLength: 20 }
+        countryCode: { type: string, maxLength: 2, example: IN }
+        isPrimary: { type: boolean }
+        effectiveFrom: { type: string, format: date-time }
+        effectiveTo: { type: string, format: date-time, nullable: true }
+
+    UpdateAddressRequestDto:
+      type: object
+      required: [customerId, addressId, addressType, line1, city, stateProvince, postalCode, countryCode, effectiveFrom]
+      properties:
+        customerId: { type: string, format: uuid }
+        addressId: { type: string, format: uuid }
+        addressType: { $ref: '#/components/schemas/AddressType' }
+        line1: { type: string, maxLength: 200 }
+        line2: { type: string, nullable: true, maxLength: 200 }
+        line3: { type: string, nullable: true, maxLength: 200 }
+        city: { type: string, maxLength: 100 }
+        stateProvince: { type: string, maxLength: 100 }
+        postalCode: { type: string, maxLength: 20 }
+        countryCode: { type: string, maxLength: 2, example: IN }
+        isPrimary: { type: boolean, default: true }
+        effectiveFrom: { type: string, format: date-time }
+        effectiveTo: { type: string, format: date-time, nullable: true }
+        sourceChannel: { type: string, maxLength: 20 }
+        correlationId: { type: string, nullable: true, maxLength: 100 }
+        reason: { type: string, nullable: true, maxLength: 200 }
+
+    UpsertAddressRequestDto:
+      type: object
+      required: [customerId, addressType, line1, city, stateProvince, postalCode, countryCode]
+      properties:
+        customerId: { type: string, format: uuid }
+        addressType: { $ref: '#/components/schemas/AddressType' }
+        line1: { type: string, maxLength: 200 }
+        line2: { type: string, nullable: true, maxLength: 200 }
+        line3: { type: string, nullable: true, maxLength: 200 }
+        city: { type: string, maxLength: 100 }
+        stateProvince: { type: string, maxLength: 100 }
+        postalCode: { type: string, maxLength: 20 }
+        countryCode: { type: string, maxLength: 2, example: IN }
+        isPrimary: { type: boolean, default: true }
+        effectiveFrom: { type: string, format: date-time }
+        effectiveTo: { type: string, format: date-time, nullable: true }
+        sourceChannel: { type: string, maxLength: 20 }
+        correlationId: { type: string, nullable: true, maxLength: 100 }
+        reason: { type: string, nullable: true, maxLength: 200 }
+
+    AddressType:
+      type: string
+      enum: [Residential, Mailing, Work]
+
+    # ==== Preferences
+    PreferencesDto:
+      type: object
+      properties:
+        smsEnabled: { type: boolean }
+        emailEnabled: { type: boolean }
+        pushEnabled: { type: boolean }
+        regulatoryConsentGiven: { type: boolean }
+        language: { type: string, nullable: true, maxLength: 10 }
+        timeZone: { type: string, nullable: true, maxLength: 64 }
+        updatedAt: { type: string, format: date-time }
+
+    UpdatePreferencesRequestDto:
+      type: object
+      required: [customerId]
+      properties:
+        customerId: { type: string, format: uuid }
+        smsEnabled: { type: boolean, nullable: true }
+        emailEnabled: { type: boolean, nullable: true }
+        pushEnabled: { type: boolean, nullable: true }
+        regulatoryConsentGiven: { type: boolean, nullable: true }
+        language: { type: string, nullable: true, maxLength: 10 }
+        timeZone: { type: string, nullable: true, maxLength: 64 }
+        sourceChannel: { type: string, maxLength: 20 }
+        correlationId: { type: string, nullable: true, maxLength: 100 }
+        reason: { type: string, nullable: true, maxLength: 200 }
+
+    # ==== Generic
+    AuditEntryDto:
+      type: object
+      properties:
+        auditId: { type: string, format: uuid }
+        customerId: { type: string, format: uuid }
+        entity: { type: string }
+        entityId: { type: string }
+        operation: { type: string }
+        oldValueJson: { type: string }
+        newValueJson: { type: string }
+        changedFieldsCsv: { type: string }
+        actorId: { type: string }
+        actorRole: { type: string }
+        sourceChannel: { type: string }
+        reasonCode: { type: string, nullable: true }
+        correlationId: { type: string, nullable: true }
+        timestamp: { type: string, format: date-time }
+
+    OperationResultDto:
+      type: object
+      properties:
+        success: { type: boolean }
+        code:
+          type: string
+          enum: [OK, PENDING_VERIFICATION, VALIDATION_ERROR, CONFLICT, NOT_FOUND]
+        message: { type: string }
+
+    ErrorResponse:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+        correlationId: { type: string, nullable: true }
+        traceId: { type: string, nullable: true }
+        details:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+security:
+  - OAuth2: [profile.read]

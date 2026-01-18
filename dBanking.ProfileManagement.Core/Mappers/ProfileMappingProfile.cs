@@ -13,13 +13,13 @@ namespace dBanking.ProfileManagement.Core.Mappers
             // CONTACTS
             // ----------------------------
 
-            CreateMap<Profile, ContactViewDto>()
-                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Contact.Email))
-                .ForMember(dest => dest.EmailStatus, opt => opt.MapFrom(src => src.Contact.EmailStatus.ToString()))
-                .ForMember(dest => dest.PhoneE164, opt => opt.MapFrom(src => src.Contact.PhoneE164))
-                .ForMember(dest => dest.PhoneStatus, opt => opt.MapFrom(src => src.Contact.PhoneStatus.ToString()))
-                .ForMember(dest => dest.PendingEmail, opt => opt.MapFrom(src => src.Contact.PendingEmail))
-                .ForMember(dest => dest.PendingPhoneE164, opt => opt.MapFrom(src => src.Contact.PendingPhoneE164));
+            CreateMap<Contact, ContactViewDto>()
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                .ForMember(dest => dest.EmailStatus, opt => opt.MapFrom(src => src.EmailStatus.ToString()))
+                .ForMember(dest => dest.PhoneE164, opt => opt.MapFrom(src => src.PhoneE164))
+                .ForMember(dest => dest.PhoneStatus, opt => opt.MapFrom(src => src.PhoneStatus.ToString()))
+                .ForMember(dest => dest.PendingEmail, opt => opt.MapFrom(src => src.PendingEmail))
+                .ForMember(dest => dest.PendingPhoneE164, opt => opt.MapFrom(src => src.PendingPhoneE164));
 
             // No Contact ← DTO mapping because updates flow via services,
             // not direct entity replacement.

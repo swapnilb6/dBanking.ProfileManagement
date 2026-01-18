@@ -17,8 +17,10 @@ namespace dBanking.ProfileManagement.Infrastructure.Configurations
             // We rely on xmin concurrency (PostgreSQL). Ignore RowVersion property.
             builder.Ignore(p => p.RowVersion);
 
-            // Use xmin as concurrency token
-            builder.UseXminAsConcurrencyToken();
+            // If you want to use PostgreSQL's xmin as a concurrency token, configure it manually:
+            builder.Property<uint>("xmin")
+                .IsRowVersion()
+                .HasColumnName("xmin");
 
             // ----- Contact (owned)
             builder.OwnsOne(p => p.Contact, contact =>

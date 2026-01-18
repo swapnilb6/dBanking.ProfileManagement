@@ -13,7 +13,10 @@ namespace dBanking.ProfileManagement.Core.Validators.Addresses
 
             RuleFor(x => x.AddressType)
                 .NotEmpty()
-                .Must(v => v.Equals("Residential", true) || v.Equals("Mailing", true) || v.Equals("Work", true))
+                .Must(v =>
+                    string.Equals(v, "Residential", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(v, "Mailing", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(v, "Work", StringComparison.OrdinalIgnoreCase))
                 .WithMessage("AddressType must be Residential, Mailing, or Work.");
 
             RuleFor(x => x.Line1).NotEmpty().MaximumLength(200);
