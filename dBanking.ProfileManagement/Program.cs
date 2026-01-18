@@ -189,7 +189,7 @@ app.MapControllers();
 app.UseRateLimiter();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+//app.MapHealthChecks("/health");
 
 
 
