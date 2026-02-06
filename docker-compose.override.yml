@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  dbanking.profilemanagement.api:
+    env_file:
+      - .env
+    environment:
+      - DOTNET_RUNNING_IN_CONTAINER=true
+      - ASPNETCORE_URLS=http://+:9091
+    ports:
+      - "9091:9091"

@@ -1,10 +1,11 @@
 ﻿
 using dBanking.ProfileManagement.Core.ServiceContracts;
 using dBanking.ProfileManagement.Core.Services;
+using dBanking.ProfileManagement.Infrastructure;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
-namespace dBanking.Core
+namespace dBanking.ProfileManagement.Core
 {
     public static class dependancyInjection
     {
@@ -16,7 +17,8 @@ namespace dBanking.Core
             services.AddScoped<IAddressService, AddressService>();
             services.AddScoped<IPreferenceService, PreferenceService>();
             services.AddScoped<IVerificationService, VerificationService>();
-
+            services.AddScoped<IProfileEventPublisher, ProfileEventPublisher>();
+            services.AddSingleton<IClock, SystemClock>();
             return services;
         }
     }

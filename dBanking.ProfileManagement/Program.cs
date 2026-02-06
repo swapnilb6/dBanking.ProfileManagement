@@ -11,12 +11,33 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
-
+using dBanking.ProfileManagement.Infrastructure;
+using dBanking.ProfileManagement.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+//Add Local services
+builder.Services.AddProfileInfrastructure(builder.Configuration);
+builder.Services.AddCoreServices();
 
+var isInContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
+
+builder.WebHost.ConfigureKestrel((context, kestrel) =>
+{
+    if (isInContainer)
+    {
+        // Docker port
+        kestrel.Listen(System.Net.IPAddress.Any, 9091);
+    }
+    else
+    {
+        // Local dev (VS IIS Express / Project)
+        kestrel.Listen(System.Net.IPAddress.Any, 5018);
+    }
+});
+
+
+// Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -146,8 +167,21 @@ builder.Services.AddApiVersioning(o =>
 
 // PostgreSQL registration using AppPostgresDbContext
 // Make sure you have a connection string named "PostgresDB" in configuration
+//builder.Services.AddDbContext<ProfileDbContext>(options =>
+//    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresAzureDb")));
+
+// ---------- Postgres ----------
+var pgHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "op1-postgres";
+var pgPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
+var pgDb = Environment.GetEnvironmentVariable("DB_NAME") ?? "dBanking_CMS";
+var pgUser = Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
+var pgPass = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "postgres";
+var pgDetail = Environment.GetEnvironmentVariable("PG_INCLUDE_ERROR_DETAIL") == "true" ? "true" : "false";
+
+var connString = $"Host={pgHost};Port={pgPort};Database={pgDb};Username={pgUser};Password={pgPass};Include Error Detail={pgDetail}";
+
 builder.Services.AddDbContext<ProfileDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresAzureDb")));
+    options.UseNpgsql(connString));
 
 var app = builder.Build();
 
@@ -157,7 +191,6 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-
     app.UseSwaggerUI(c =>
     {
         c.OAuthClientId("7eb2a262-7d80-4d2c-856b-efa4c44da4d4");
@@ -168,7 +201,6 @@ if (app.Environment.IsDevelopment())
         c.OAuthAdditionalQueryStringParams(new Dictionary<string, string> { { "prompt", "select_account" } });
     });
 }
-
 
 app.Use(async (ctx, next) =>
 {
@@ -186,16 +218,20 @@ app.Use(async (ctx, next) =>
 
 app.UseExceptionHandler(); // surfaces ProblemDetails on exceptions
 
-app.UseHttpsRedirection();
+// Only redirect to HTTPS when not running inside container (or when you have TLS set up in container)
+if (!isInContainer)
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+// Ensure rate limiting is applied to incoming requests before controllers execute
 app.UseRateLimiter();
 
 app.MapControllers();
+
 //app.MapHealthChecks("/health");
-
-
 
 app.Run();

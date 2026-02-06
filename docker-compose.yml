@@ -1,0 +1,85 @@
+version: "3.9"
+
+networks:
+  op2-net:
+    driver: bridge
+
+volumes:
+  op2-postgres-data:
+  op2-rabbitmq-data:
+  op2-rabbitmq-log:
+  data-protection-keys:
+
+services:
+  op2-postgres:
+    image: postgres:16
+    container_name: op2-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      # Map container 5432 to host ${POSTGRES_PORT} (use 5433 in .env to avoid conflict)
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - op2-postgres-data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h 127.0.0.1"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks:
+      - op2-net
+
+  op2-rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: op2-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "${RABBITMQ_AMQP_PORT}:5672"
+      - "${RABBITMQ_HTTP_PORT}:15672"
+    volumes:
+      - op2-rabbitmq-data:/var/lib/rabbitmq/mnesia
+      - op2-rabbitmq-log:/var/log/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    networks:
+      - op2-net
+
+  # Added service expected by Visual Studio Docker tooling
+  dbanking.profilemanagement.api:
+    build:
+      context: .
+      dockerfile: ./dBanking.ProfileManagement/Dockerfile
+      args:
+        BUILD_CONFIGURATION: Release
+        APP_UID: ${APP_UID}
+    env_file:
+      - .env
+    depends_on:
+      op2-postgres:
+        condition: service_healthy
+      op2-rabbitmq:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      DOTNET_RUNNING_IN_CONTAINER: "true"
+      ASPNETCORE_URLS: http://0.0.0.0:9091
+      DB_HOST: op2-postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${API_HTTP_PORT}:9091"
+    networks:
+      - op2-net

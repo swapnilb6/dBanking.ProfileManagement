@@ -15,7 +15,6 @@
 **/bin
 **/charts
 **/docker-compose*
-**/Dockerfile*
 **/node_modules
 **/npm-debug.log
 **/obj
@@ -27,4 +26,4 @@ README.md
 !.git/HEAD
 !.git/config
 !.git/packed-refs
-!.git/refs/heads/**
+!.git/refs/heads/**!.git/refs/heads/**
