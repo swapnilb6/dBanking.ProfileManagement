@@ -1,6 +1,9 @@
 using dBanking.ProfileManagement.API.Filters;
 using dBanking.ProfileManagement.API.Middleware;
+using dBanking.ProfileManagement.Core;
+using dBanking.ProfileManagement.Core.Mappers;
 using dBanking.ProfileManagement.Core.Validators.Contacts;
+using dBanking.ProfileManagement.Infrastructure;
 using dBanking.ProfileManagement.Infrastructure.DbContext;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -11,8 +14,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
-using dBanking.ProfileManagement.Infrastructure;
-using dBanking.ProfileManagement.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -140,6 +141,14 @@ builder.Services.AddProblemDetails(); // .NET 8 built-in
 
 // Idempotency store (in-memory for dev)
 builder.Services.AddSingleton<IIdempotencyStore, InMemoryIdempotencyStore>();
+
+
+// Register AutoMapper (scan assemblies for Profiles)
+builder.Services.AddAutoMapper(cfg => { /* optional global config */ },
+    typeof(Program).Assembly,                // current assembly
+    typeof(ProfileMappingProfile).Assembly          // explicitly include core/profile assembly
+);
+
 
 
 // Rate Limiting

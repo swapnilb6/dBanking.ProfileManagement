@@ -5,6 +5,7 @@ using dBanking.ProfileManagement.Infrastructure;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
+using AutoMapper;
 namespace dBanking.ProfileManagement.Core
 {
     public static class dependancyInjection
@@ -19,6 +20,7 @@ namespace dBanking.ProfileManagement.Core
             services.AddScoped<IVerificationService, VerificationService>();
             services.AddScoped<IProfileEventPublisher, ProfileEventPublisher>();
             services.AddSingleton<IClock, SystemClock>();
+       
             return services;
         }
     }
