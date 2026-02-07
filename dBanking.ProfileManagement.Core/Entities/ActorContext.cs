@@ -2,7 +2,6 @@
 namespace dBanking.ProfileManagement.Core.Entities
 {
     using dBanking.ProfileManagement.Core.Entities;
-
     public sealed record ActorContext(
         string ActorId,
         ActorRole ActorRole,
@@ -11,5 +10,4 @@ namespace dBanking.ProfileManagement.Core.Entities
         string? UserAgent = null,
         string? CorrelationId = null,
         string? Reason = null);
-
 }

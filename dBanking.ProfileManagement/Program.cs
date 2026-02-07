@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
 using System.Threading.RateLimiting;
@@ -182,7 +183,7 @@ builder.Services.AddApiVersioning(o =>
 // ---------- Postgres ----------
 var pgHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "op1-postgres";
 var pgPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
-var pgDb = Environment.GetEnvironmentVariable("DB_NAME") ?? "dBanking_CMS";
+var pgDb = Environment.GetEnvironmentVariable("DB_NAME") ?? "dBanking_profileMgt";
 var pgUser = Environment.GetEnvironmentVariable("DB_USER") ?? "postgres";
 var pgPass = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "postgres";
 var pgDetail = Environment.GetEnvironmentVariable("PG_INCLUDE_ERROR_DETAIL") == "true" ? "true" : "false";
@@ -190,8 +191,10 @@ var pgDetail = Environment.GetEnvironmentVariable("PG_INCLUDE_ERROR_DETAIL") == 
 var connString = $"Host={pgHost};Port={pgPort};Database={pgDb};Username={pgUser};Password={pgPass};Include Error Detail={pgDetail}";
 
 builder.Services.AddDbContext<ProfileDbContext>(options =>
-    options.UseNpgsql(connString));
-
+{
+    options.UseNpgsql(connString);
+    //options.UseSnakeCaseNamingConvention();
+});
 var app = builder.Build();
 
 app.UseMiddleware<CorrelationIdMiddleware>();
@@ -209,6 +212,42 @@ if (app.Environment.IsDevelopment())
             $"{app.Configuration["AzureAd:Audience"]}/profile.write");
         c.OAuthAdditionalQueryStringParams(new Dictionary<string, string> { { "prompt", "select_account" } });
     });
+
+
+
+
+
+    // ---- Apply EF Core migrations automatically on startup, with retry ----
+    using (var scope = app.Services.CreateScope())
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ProfileDbContext>();
+
+        var maxRetries = 10;
+        var delay = TimeSpan.FromSeconds(5);
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                // This applies any pending migrations and will insert HasData seeds
+                await dbContext.Database.MigrateAsync();
+                logger.LogInformation("Database migrated successfully.");
+                break;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Database migration attempt {Attempt}/{Max} failed. Retrying in {Delay}...", attempt, maxRetries, delay);
+                if (attempt == maxRetries)
+                {
+                    logger.LogError(ex, "Database migration failed after {Max} attempts. Exiting.", maxRetries);
+                    throw; // Crash the container so Compose restarts it; next attempt often succeeds
+                }
+                await Task.Delay(delay);
+            }
+        }
+    }
+
 }
 
 app.Use(async (ctx, next) =>
