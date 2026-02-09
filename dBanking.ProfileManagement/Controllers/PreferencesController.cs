@@ -20,7 +20,7 @@ namespace dBanking.ProfileManagement.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "profile.read")]
+        //[Authorize(Policy = "profile.read")]
         [ProducesResponseType(typeof(PreferencesDto), StatusCodes.Status200OK)]
         public async Task<IActionResult> Get(Guid customerId, CancellationToken ct)
         {
@@ -29,7 +29,7 @@ namespace dBanking.ProfileManagement.API.Controllers
         }
 
         [HttpPut]
-        [Authorize(Policy = "profile.write")]
+        //[Authorize(Policy = "profile.write")]
         [ProducesResponseType(typeof(PreferencesDto), StatusCodes.Status200OK)]
         public async Task<IActionResult> Update(Guid customerId, [FromBody] UpdatePreferencesRequestDto request, CancellationToken ct)
         {

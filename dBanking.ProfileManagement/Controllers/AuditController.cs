@@ -18,7 +18,7 @@ namespace dBanking.ProfileManagement.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "profile.read")]
+        //[Authorize(Policy = "profile.read")]
         [ProducesResponseType(typeof(IEnumerable<AuditEntryDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Get(Guid customerId, [FromQuery] string? entity, [FromQuery] int skip = 0, [FromQuery] int take = 50, CancellationToken ct = default)
         {

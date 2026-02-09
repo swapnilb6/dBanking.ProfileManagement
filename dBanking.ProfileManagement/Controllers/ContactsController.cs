@@ -20,7 +20,7 @@ namespace dBanking.ProfileManagement.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "profile.read")]
+        //[Authorize(Policy = "profile.read")]
         [ProducesResponseType(typeof(ContactViewDto), StatusCodes.Status200OK)]
         public async Task<IActionResult> Get(Guid customerId, CancellationToken ct)
         {
@@ -29,7 +29,7 @@ namespace dBanking.ProfileManagement.API.Controllers
         }
 
         [HttpPost("email/change-request")]
-        [Authorize(Policy = "profile.write")]
+        //[Authorize(Policy = "profile.write")]
         [IdempotencyRequired]
         [EnableRateLimiting("tight")]
         [ProducesResponseType(typeof(ContactChangeResultDto), StatusCodes.Status202Accepted)]

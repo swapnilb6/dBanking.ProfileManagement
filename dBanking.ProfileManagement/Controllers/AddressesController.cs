@@ -19,7 +19,7 @@ namespace dBanking.ProfileManagement.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "profile.read")]
+        //[Authorize(Policy = "profile.read")]
         [ProducesResponseType(typeof(IEnumerable<AddressDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> Get(Guid customerId, CancellationToken ct)
         {
@@ -41,7 +41,7 @@ namespace dBanking.ProfileManagement.API.Controllers
         }
 
         [HttpPut("{addressId:guid}")]
-        [Authorize(Policy = "profile.write")]
+        //[Authorize(Policy = "profile.write")]
         [ProducesResponseType(typeof(AddressDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update(Guid customerId, Guid addressId, [FromBody] UpdateAddressRequestDto request, CancellationToken ct)
@@ -55,7 +55,7 @@ namespace dBanking.ProfileManagement.API.Controllers
         }
 
         [HttpPost("{addressId:guid}/set-primary")]
-        [Authorize(Policy = "profile.write")]
+        //[Authorize(Policy = "profile.write")]
         [ProducesResponseType(typeof(OperationResultDto), StatusCodes.Status200OK)]
         public async Task<IActionResult> SetPrimary(Guid customerId, Guid addressId, CancellationToken ct)
         {
