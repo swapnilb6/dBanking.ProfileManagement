@@ -8,25 +8,25 @@ namespace dBanking.ProfileManagement.Core.Entities
 {
     public sealed class Address
     {
-        public Guid AddressId { get; set; } = Guid.NewGuid();
-        public Guid CustomerId { get; set; }             // FK to Profile.CustomerId
+        public long Id { get; set; }                // surrogate
+        public Guid AddressId { get; set; }         // public id
+        public Guid CustomerId { get; set; }        // FK -> Profile.CustomerId
 
-        public AddressType AddressType { get; set; } = AddressType.Residential;
-
-        public string Line1 { get; set; } = string.Empty;
+        public string Type { get; set; } = "Residential";
+        public string Line1 { get; set; } = default!;
         public string? Line2 { get; set; }
-        public string? Line3 { get; set; }
-        public string City { get; set; } = string.Empty;
-        public string StateProvince { get; set; } = string.Empty;
-        public string PostalCode { get; set; } = string.Empty;
-        public string CountryCode { get; set; } = "IN";  // ISO 3166-1 alpha-2
+        public string City { get; set; } = default!;
+        public string? StateProvince { get; set; }
+        public string? PostalCode { get; set; }
+        public string CountryCode { get; set; } = default!;
 
-        public bool IsPrimary { get; set; } = true;
-        public DateTimeOffset EffectiveFrom { get; set; } = DateTimeOffset.UtcNow;
+        public bool IsPrimary { get; set; }
+
+        public DateTimeOffset EffectiveFrom { get; set; }
         public DateTimeOffset? EffectiveTo { get; set; }
 
-        // Audit
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
     }
 }

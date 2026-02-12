@@ -40,8 +40,19 @@ namespace dBanking.ProfileManagement.Core.Services
 
         public async Task<IReadOnlyList<AddressDto>> GetByCustomerAsync(Guid customerId, CancellationToken ct)
         {
-            var entities = await _addresses.GetByCustomerAsync(customerId, ct);
-            return entities.Select(_mapper.Map<AddressDto>).ToList();
+            try
+            {
+                var entities = await _addresses.GetByCustomerAsync(customerId, ct);
+                return entities.Select(_mapper.Map<AddressDto>).ToList();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error retrieving addresses for customer {customerId}.", ex);
+            }
         }
 
         public async Task<AddressDto> UpsertAsync(UpsertAddressRequestDto request, ActorContext actor, CancellationToken ct)

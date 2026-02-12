@@ -195,6 +195,13 @@ builder.Services.AddDbContext<ProfileDbContext>(options =>
     options.UseNpgsql(connString);
     //options.UseSnakeCaseNamingConvention();
 });
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "op2-redis:6379"; // Update with your Redis configuration
+    options.InstanceName = "dBankingCache_";
+});
+
 var app = builder.Build();
 
 app.UseMiddleware<CorrelationIdMiddleware>();

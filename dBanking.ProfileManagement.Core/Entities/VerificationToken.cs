@@ -8,23 +8,21 @@ namespace dBanking.ProfileManagement.Core.Entities
 {
     public sealed class VerificationToken
     {
-        public Guid VerificationId { get; set; } = Guid.NewGuid();
+        public long Id { get; set; }
         public Guid CustomerId { get; set; }
 
-        public VerificationType Type { get; set; }           // EmailLink or SmsOtp
-        public string ChannelValue { get; set; } = string.Empty; // email or phoneE164 (new target)
-        public string TokenHash { get; set; } = string.Empty; // store hash only
-        public string? OtpSalt { get; set; }                  // optional if hashing OTP differently
-
-        public VerificationStatus Status { get; set; } = VerificationStatus.Pending;
+        public string Type { get; set; } = default!;      // 'EmailLink'|'SmsOtp'
+        public string ChannelValue { get; set; } = default!;
+        public string TokenHash { get; set; } = default!;
+        public DateTimeOffset IssuedAt { get; set; }
         public DateTimeOffset ExpiresAt { get; set; }
-        public int AttemptCount { get; set; }
-        public int MaxAttempts { get; set; } = 5;
 
-        // Correlation & operations
-        public string? CorrelationId { get; set; }
-        public DateTimeOffset CreatedAt { get; set; }
+        public int AttemptCount { get; set; }
+        public int MaxAttempts { get; set; }
+        public string Status { get; set; } = "Pending";   // 'Pending'|...
+
         public DateTimeOffset? VerifiedAt { get; set; }
-        public string? FailureReason { get; set; }            // e.g., Expired, AttemptsExceeded
+        public Guid? CorrelationId { get; set; }
+
     }
 }

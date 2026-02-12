@@ -79,7 +79,27 @@ services:
       DB_NAME: ${POSTGRES_DB}
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
+
+      #Redis
+      REDIS_HOST: op2-redis
+      REDIS_PORT: 6379
     ports:
       - "${API_HTTP_PORT}:9091"
+    networks:
+      - op2-net
+
+  op2-redis:
+    container_name: op2-redis
+    image: redis:latest
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - C:/Users/QL132BZ/source/op2-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
     networks:
       - op2-net

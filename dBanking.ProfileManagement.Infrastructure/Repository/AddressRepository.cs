@@ -17,17 +17,36 @@ namespace dBanking.ProfileManagement.Infrastructure.Repository
 
         public AddressRepository(ProfileDbContext db) => _db = db;
 
-        public async Task<IReadOnlyList<Address>> GetByCustomerAsync(Guid customerId, CancellationToken ct) =>
-            await _db.Addresses
-                     .AsNoTracking()
-                     .Where(a => a.CustomerId == customerId)
-                     .OrderByDescending(a => a.IsPrimary)
-                     .ThenByDescending(a => a.UpdatedAt)
-                     .ToListAsync(ct);
+        public async Task<IReadOnlyList<Address>> GetByCustomerAsync(Guid customerId, CancellationToken ct)
+        {
+            try
+            {
+                return await _db.Addresses
+                         .AsNoTracking()
+                         .Where(a => a.CustomerId == customerId)
+                         .OrderByDescending(a => a.IsPrimary)
+                         .ThenByDescending(a => a.UpdatedAt)
+                         .ToListAsync(ct);
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new InvalidOperationException($"Failed to retrieve addresses for customer {customerId}.", ex);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"An error occurred while retrieving addresses for customer {customerId}.", ex);
+            }
+        }
 
-        public async Task<Address?> GetAsync(Guid customerId, Guid addressId, CancellationToken ct) =>
-            await _db.Addresses
+        public async Task<Address?> GetAsync(Guid customerId, Guid addressId, CancellationToken ct)
+        {
+            return await _db.Addresses
                      .FirstOrDefaultAsync(a => a.CustomerId == customerId && a.AddressId == addressId, ct);
+        }
 
         public async Task UpsertAsync(Address address, CancellationToken ct)
         {

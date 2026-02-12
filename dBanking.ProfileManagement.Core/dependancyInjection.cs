@@ -20,7 +20,13 @@ namespace dBanking.ProfileManagement.Core
             services.AddScoped<IVerificationService, VerificationService>();
             services.AddScoped<IProfileEventPublisher, ProfileEventPublisher>();
             services.AddSingleton<IClock, SystemClock>();
-       
+
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = "op1-redis:6379"; // Update with your Redis configuration
+                options.InstanceName = "dBankingCache_";
+            });
+
             return services;
         }
     }
