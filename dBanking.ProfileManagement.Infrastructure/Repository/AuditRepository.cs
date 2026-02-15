@@ -27,10 +27,10 @@ namespace dBanking.ProfileManagement.Infrastructure.Repository
                 .Where(a => a.CustomerId == customerId);
 
             if (!string.IsNullOrWhiteSpace(entityFilter))
-                query = query.Where(a => a.Entity == entityFilter);
+                query = query.Where(a => a.ToString() == entityFilter);
 
             return await query
-                .OrderByDescending(a => a.Timestamp)
+                .OrderByDescending(a => a.ChangedAt)
                 .Skip(skip)
                 .Take(take)
                 .ToListAsync(ct);

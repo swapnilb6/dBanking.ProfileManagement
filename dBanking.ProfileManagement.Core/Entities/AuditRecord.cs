@@ -8,6 +8,8 @@ namespace dBanking.ProfileManagement.Core.Entities
 {
     public sealed class AuditRecord
     {
+
+
         public long Id { get; set; }
         public Guid CustomerId { get; set; }
         public string EntityName { get; set; } = default!;
@@ -16,11 +18,10 @@ namespace dBanking.ProfileManagement.Core.Entities
         public string? Actor { get; set; }
         public string? Channel { get; set; }
         public DateTimeOffset ChangedAt { get; set; }
+        public string? OldJson { get; set; }
+        public string? NewJson { get; set; }
         public string? ChangedFieldsCsv { get; set; }
         public Guid? CorrelationId { get; set; }
-
-        public string? OldJson { get; set; } // If you use string/jsonb value converter, map as string
-        public string? NewJson { get; set; }
 
     }
 }

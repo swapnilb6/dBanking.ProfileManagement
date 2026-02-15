@@ -1,5 +1,4 @@
-﻿
-using AutoMapper;
+﻿using AutoMapper;
 using dBanking.ProfileManagement.Core.DTOs;
 using dBanking.ProfileManagement.Core.Entities;
 using dBanking.ProfileManagement.Core.Events;
@@ -75,7 +74,7 @@ namespace dBanking.ProfileManagement.Core.Services
             if (request.SmsEnabled.HasValue) profile.Preferences.SmsEnabled = request.SmsEnabled.Value;
             if (request.EmailEnabled.HasValue) profile.Preferences.EmailEnabled = request.EmailEnabled.Value;
             if (request.PushEnabled.HasValue) profile.Preferences.PushEnabled = request.PushEnabled.Value;
-            if (request.RegulatoryConsentGiven.HasValue) profile.Preferences.RegulatoryConsentGiven = request.RegulatoryConsentGiven.Value;
+            if (request.RegulatoryConsent.HasValue) profile.Preferences.RegulatoryConsentGiven = request.RegulatoryConsent.Value;
             if (!string.IsNullOrWhiteSpace(request.Language)) profile.Preferences.Language = request.Language;
             if (!string.IsNullOrWhiteSpace(request.TimeZone)) profile.Preferences.TimeZone = request.TimeZone;
 
@@ -86,24 +85,19 @@ namespace dBanking.ProfileManagement.Core.Services
 
             var changedCsv = DiffHelper.ChangedFieldsCsv(before, after);
 
-            await _audits.AddAsync(new AuditRecord
-            {
-                CustomerId = request.CustomerId,
-                Entity = "Preferences",
-                EntityId = "Preferences",
-                Operation = "Update",
-                OldValueJson = JsonHelper.ToJson(before),
-                NewValueJson = JsonHelper.ToJson(after),
-                ChangedFieldsCsv = string.IsNullOrWhiteSpace(changedCsv) ? "NONE" : changedCsv,
-                ActorId = actor.ActorId,
-                ActorRole = actor.ActorRole,
-                SourceChannel = actor.SourceChannel,
-                ReasonCode = actor.Reason,
-                IpAddress = actor.IpAddress,
-                UserAgent = actor.UserAgent,
-                CorrelationId = actor.CorrelationId,
-                Timestamp = _clock.UtcNow
-            }, ct);
+            var now = _clock.UtcNow; // or DateTimeOffset.UtcNow
+            var audit = AuditFactory.CreateWithMeta(
+                customerId: request.CustomerId,
+                entityName: "Preferences",
+                entityId: "preferences",
+                action: "Update",
+                oldObject: before,
+                newObject: after,
+                changedFieldsCsv: string.Join(",", after),
+                actor: actor,
+                now: now
+            );
+            await _audits.AddAsync(audit, ct);
 
             await _uow.SaveChangesAsync(ct);
 
@@ -112,10 +106,10 @@ namespace dBanking.ProfileManagement.Core.Services
                 SmsEnabled: request.SmsEnabled,
                 EmailEnabled: request.EmailEnabled,
                 PushEnabled: request.PushEnabled,
-                RegulatoryConsentGiven: request.RegulatoryConsentGiven,
+                RegulatoryConsentGiven: request.RegulatoryConsent,
                 Language: request.Language,
                 TimeZone: request.TimeZone,
-                CorrelationId: actor.CorrelationId ?? string.Empty,
+                CorrelationId: actor.CorrelationId?.ToString() ?? string.Empty,
                 UpdatedAt: profile.Preferences.UpdatedAt
             ), ct);
 

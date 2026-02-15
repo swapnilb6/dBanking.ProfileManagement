@@ -1,5 +1,4 @@
-﻿
-namespace dBanking.ProfileManagement.Core.DTOs
+﻿namespace dBanking.ProfileManagement.Core.DTOs
 {
     using System;
 
@@ -10,9 +9,9 @@ namespace dBanking.ProfileManagement.Core.DTOs
     public record ContactViewDto
     {
         public string? Email { get; init; }
-        public string EmailStatus { get; init; } = "Unknown";
+        public string EmailStatus { get; init; } = "Unverified"; // align with domain
         public string? PhoneE164 { get; init; }
-        public string PhoneStatus { get; init; } = "Unknown";
+        public string PhoneStatus { get; init; } = "Unverified";
 
         public string? PendingEmail { get; init; }
         public string? PendingPhoneE164 { get; init; }
@@ -33,7 +32,6 @@ namespace dBanking.ProfileManagement.Core.DTOs
         public string VerificationToken { get; init; } = string.Empty; // raw token from link
         public string? CorrelationId { get; init; }
     }
-
     public record ChangePhoneRequestDto
     {
         public Guid CustomerId { get; init; }
@@ -60,14 +58,12 @@ namespace dBanking.ProfileManagement.Core.DTOs
     // ----------------------------
     // Addresses
     // ----------------------------
-
     public record AddressDto
     {
         public Guid AddressId { get; init; }
         public string AddressType { get; init; } = "Residential";
         public string Line1 { get; init; } = string.Empty;
         public string? Line2 { get; init; }
-        public string? Line3 { get; init; }
         public string City { get; init; } = string.Empty;
         public string StateProvince { get; init; } = string.Empty;
         public string PostalCode { get; init; } = string.Empty;
@@ -97,7 +93,6 @@ namespace dBanking.ProfileManagement.Core.DTOs
         public string? Reason { get; init; }
     }
 
-    // Optional convenience for upsert without AddressId
     public record UpsertAddressRequestDto
     {
         public Guid CustomerId { get; init; }
@@ -116,20 +111,20 @@ namespace dBanking.ProfileManagement.Core.DTOs
         public string? CorrelationId { get; init; }
         public string? Reason { get; init; }
     }
-
     // ----------------------------
     // Preferences
     // ----------------------------
-
     public record PreferencesDto
     {
+
         public bool SmsEnabled { get; init; }
         public bool EmailEnabled { get; init; }
         public bool PushEnabled { get; init; }
-        public bool RegulatoryConsentGiven { get; init; }
+        public bool RegulatoryConsent { get; init; }
         public string? Language { get; init; }
         public string? TimeZone { get; init; }
-        public DateTimeOffset UpdatedAt { get; init; }
+        public DateTimeOffset? PreferencesUpdatedAt { get; init; }
+
     }
 
     public record UpdatePreferencesRequestDto
@@ -138,7 +133,7 @@ namespace dBanking.ProfileManagement.Core.DTOs
         public bool? SmsEnabled { get; init; }
         public bool? EmailEnabled { get; init; }
         public bool? PushEnabled { get; init; }
-        public bool? RegulatoryConsentGiven { get; init; }
+        public bool? RegulatoryConsent { get; init; }
         public string? Language { get; init; }
         public string? TimeZone { get; init; }
 
@@ -146,27 +141,25 @@ namespace dBanking.ProfileManagement.Core.DTOs
         public string? CorrelationId { get; init; }
         public string? Reason { get; init; }
     }
-
     // ----------------------------
     // Audit (read model)
     // ----------------------------
 
     public record AuditEntryDto
     {
-        public Guid AuditId { get; init; }
+        public long AuditId { get; init; }                 // maps from Id
         public Guid CustomerId { get; init; }
-        public string Entity { get; init; } = string.Empty;
+        public string EntityName { get; init; } = string.Empty;
         public string EntityId { get; init; } = string.Empty;
-        public string Operation { get; init; } = string.Empty;
+        public string Action { get; init; } = string.Empty;
+        public string? Actor { get; init; }
+        public string? Channel { get; init; }
+        public DateTimeOffset ChangedAt { get; init; }
         public string OldValueJson { get; init; } = "{}";
         public string NewValueJson { get; init; } = "{}";
         public string ChangedFieldsCsv { get; init; } = string.Empty;
-        public string ActorId { get; init; } = string.Empty;
-        public string ActorRole { get; init; } = "Customer";
-        public string SourceChannel { get; init; } = "Web";
-        public string? ReasonCode { get; init; }
-        public string? CorrelationId { get; init; }
-        public DateTimeOffset Timestamp { get; init; }
+        public Guid? CorrelationId { get; init; }
+
     }
 
     // ----------------------------

@@ -23,7 +23,7 @@ namespace dBanking.ProfileManagement.API.Extensions
                 SourceChannel: sourceChannel,
                 IpAddress: ctx.GetSourceIp(),
                 UserAgent: ctx.GetUserAgent(),
-                CorrelationId: ctx.GetOrCreateCorrelationId(),
+                //CorrelationId: ctx.GetOrCreateCorrelationId(),
                 Reason: reason
             );
         }

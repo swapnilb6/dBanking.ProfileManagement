@@ -23,8 +23,8 @@
         Guid CustomerId,
         Guid AddressId,
         string AddressType,
-        string CorrelationId,
-        DateTimeOffset EffectiveFrom);
+        Guid? CorrelationId,
+        DateTimeOffset EffectiveFrom        );
 
     public sealed record ProfilePreferencesUpdated(
         Guid CustomerId,

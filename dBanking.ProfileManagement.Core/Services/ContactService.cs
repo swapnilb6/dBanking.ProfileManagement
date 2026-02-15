@@ -1,5 +1,4 @@
-﻿
-using AutoMapper;
+﻿using AutoMapper;
 using dBanking.ProfileManagement.Core.DTOs;
 using dBanking.ProfileManagement.Core.Entities;
 using dBanking.ProfileManagement.Core.Events;
@@ -114,7 +113,7 @@ namespace dBanking.ProfileManagement.Core.Services
                 customerId: request.CustomerId,
                 channelValue: newEmail,
                 type: "EmailLink",
-                correlationId: actor.CorrelationId,
+                correlationId: actor.CorrelationId?.ToString(),
                 ttlMinutes: 30,
                 ct);
 
@@ -127,24 +126,20 @@ namespace dBanking.ProfileManagement.Core.Services
                 profile.Contact.PendingEmailRequestedAt
             };
 
-            await _audits.AddAsync(new AuditRecord
-            {
-                CustomerId = request.CustomerId,
-                Entity = "Contacts",
-                EntityId = "Email",
-                Operation = "ChangeRequested",
-                OldValueJson = JsonHelper.ToJson(oldSnapshot),
-                NewValueJson = JsonHelper.ToJson(newSnapshot),
-                ChangedFieldsCsv = "PendingEmail,PendingEmailRequestedAt",
-                ActorId = actor.ActorId,
-                ActorRole = actor.ActorRole,
-                SourceChannel = actor.SourceChannel,
-                ReasonCode = actor.Reason,
-                IpAddress = actor.IpAddress,
-                UserAgent = actor.UserAgent,
-                CorrelationId = actor.CorrelationId,
-                Timestamp = _clock.UtcNow
-            }, ct);
+            var now = _clock.UtcNow; // or DateTimeOffset.UtcNow
+            var audit = AuditFactory.CreateWithMeta(
+                customerId: request.CustomerId,
+                entityName: "Contact",
+                entityId: "email",
+                action: "ChangeRequested",
+                oldObject: new { previous = profile.Email, pending = profile.PendingEmail },
+                newObject: new { requested = request.NewEmail },
+                changedFieldsCsv: "Email",
+                actor: actor,
+                now: now
+            );
+            await _audits.AddAsync(audit, ct);
+
 
             await _uow.SaveChangesAsync(ct);
 
@@ -152,7 +147,7 @@ namespace dBanking.ProfileManagement.Core.Services
             await _events.PublishAsync(new ProfileEmailChangeRequested(
                 CustomerId: request.CustomerId,
                 NewEmailMasked: Masking.MaskEmail(newEmail),
-                CorrelationId: actor.CorrelationId ?? string.Empty,
+                CorrelationId: actor.CorrelationId?.ToString() ?? string.Empty,
                 RequestedAt: _clock.UtcNow), ct);
 
             // The rawToken is intended for Notification service (email link),
@@ -197,31 +192,27 @@ namespace dBanking.ProfileManagement.Core.Services
             profile.Contact.LastEmailVerifiedAt = _clock.UtcNow;
             profile.UpdatedAt = _clock.UtcNow;
 
-            await _audits.AddAsync(new AuditRecord
-            {
-                CustomerId = request.CustomerId,
-                Entity = "Contacts",
-                EntityId = "Email",
-                Operation = "Verified",
-                OldValueJson = JsonHelper.ToJson(oldSnapshot),
-                NewValueJson = JsonHelper.ToJson(new { profile.Contact.Email, profile.Contact.EmailStatus }),
-                ChangedFieldsCsv = "Email,EmailStatus,PendingEmail,PendingEmailRequestedAt,LastEmailVerifiedAt",
-                ActorId = actor.ActorId,
-                ActorRole = actor.ActorRole,
-                SourceChannel = actor.SourceChannel,
-                ReasonCode = actor.Reason,
-                IpAddress = actor.IpAddress,
-                UserAgent = actor.UserAgent,
-                CorrelationId = actor.CorrelationId,
-                Timestamp = _clock.UtcNow
-            }, ct);
+            var now = _clock.UtcNow; // or DateTimeOffset.UtcNow
+            var audit = AuditFactory.CreateWithMeta(
+                customerId: request.CustomerId,
+                entityName: "Contact",
+                entityId: "email",
+                action: "Verified",
+                oldObject: new { previous = previousEmail },
+                newObject: new { current = profile.Email },
+                changedFieldsCsv: "Email",
+                actor: actor,
+                now: now
+            );
+            await _audits.AddAsync(audit, ct);
+
 
             await _uow.SaveChangesAsync(ct);
 
             await _events.PublishAsync(new ProfileEmailVerified(
                 CustomerId: request.CustomerId,
                 EmailMasked: Masking.MaskEmail(profile.Contact.Email ?? ""),
-                CorrelationId: actor.CorrelationId ?? string.Empty,
+                CorrelationId: actor.CorrelationId?.ToString() ?? string.Empty,
                 VerifiedAt: _clock.UtcNow), ct);
 
             // Notifications to old & new contact channels are done downstream (consumer side)
@@ -282,11 +273,11 @@ namespace dBanking.ProfileManagement.Core.Services
             profile.Contact.PendingPhoneRequestedAt = _clock.UtcNow;
             profile.UpdatedAt = _clock.UtcNow;
 
-            var (_, rawOtp) = await _verification.CreateAsync(
+            var (verificationId, rawOtp) = await _verification.CreateAsync(
                 customerId: request.CustomerId,
                 channelValue: newPhone,
                 type: "SmsOtp",
-                correlationId: actor.CorrelationId,
+                correlationId: actor.CorrelationId?.ToString(),
                 ttlMinutes: 10,
                 ct);
 
@@ -298,24 +289,21 @@ namespace dBanking.ProfileManagement.Core.Services
                 profile.Contact.PendingPhoneRequestedAt
             };
 
-            await _audits.AddAsync(new AuditRecord
-            {
-                CustomerId = request.CustomerId,
-                Entity = "Contacts",
-                EntityId = "Phone",
-                Operation = "ChangeRequested",
-                OldValueJson = JsonHelper.ToJson(oldSnapshot),
-                NewValueJson = JsonHelper.ToJson(newSnapshot),
-                ChangedFieldsCsv = "PendingPhoneE164,PendingPhoneRequestedAt",
-                ActorId = actor.ActorId,
-                ActorRole = actor.ActorRole,
-                SourceChannel = actor.SourceChannel,
-                ReasonCode = actor.Reason,
-                IpAddress = actor.IpAddress,
-                UserAgent = actor.UserAgent,
-                CorrelationId = actor.CorrelationId,
-                Timestamp = _clock.UtcNow
-            }, ct);
+            var now = _clock.UtcNow; // or DateTimeOffset.UtcNow
+            var audit = AuditFactory.CreateWithMeta(
+                customerId: request.CustomerId,
+                entityName: "Contacts",
+                entityId: "Phone",
+                action: "ChangeRequested",
+                oldObject: new { previous = oldSnapshot },
+                newObject: new { current = profile.Email },
+                changedFieldsCsv: "Email",
+                actor: actor,
+                now: now
+            );
+            await _audits.AddAsync(audit, ct);
+
+
 
             await _uow.SaveChangesAsync(ct);
 
@@ -357,31 +345,26 @@ namespace dBanking.ProfileManagement.Core.Services
             profile.Contact.LastPhoneVerifiedAt = _clock.UtcNow;
             profile.UpdatedAt = _clock.UtcNow;
 
-            await _audits.AddAsync(new AuditRecord
-            {
-                CustomerId = request.CustomerId,
-                Entity = "Contacts",
-                EntityId = "Phone",
-                Operation = "Verified",
-                OldValueJson = JsonHelper.ToJson(oldSnapshot),
-                NewValueJson = JsonHelper.ToJson(new { profile.Contact.PhoneE164, profile.Contact.PhoneStatus }),
-                ChangedFieldsCsv = "PhoneE164,PhoneStatus,PendingPhoneE164,PendingPhoneRequestedAt,LastPhoneVerifiedAt",
-                ActorId = actor.ActorId,
-                ActorRole = actor.ActorRole,
-                SourceChannel = actor.SourceChannel,
-                ReasonCode = actor.Reason,
-                IpAddress = actor.IpAddress,
-                UserAgent = actor.UserAgent,
-                CorrelationId = actor.CorrelationId,
-                Timestamp = _clock.UtcNow
-            }, ct);
-
+            
+            var now = _clock.UtcNow; // or DateTimeOffset.UtcNow
+            var audit = AuditFactory.CreateWithMeta(
+                customerId: request.CustomerId,
+                entityName: "Contacts",
+                entityId: "Phone",
+                action: "Verified",
+                oldObject: JsonHelper.ToJson(oldSnapshot),
+                newObject: JsonHelper.ToJson(new { profile.Contact.PhoneE164, profile.Contact.PhoneStatus }),
+                changedFieldsCsv: string.Join(",", new[] { "PhoneE164", "PhoneStatus", "PendingPhoneE164", "PendingPhoneRequestedAt", "LastPhoneVerifiedAt" }),
+                actor: actor,
+                now: now
+            );
+            await _audits.AddAsync(audit, ct);
             await _uow.SaveChangesAsync(ct);
 
             await _events.PublishAsync(new ProfilePhoneVerified(
                 CustomerId: request.CustomerId,
                 PhoneMasked: Masking.MaskPhone(profile.Contact.PhoneE164 ?? ""),
-                CorrelationId: actor.CorrelationId ?? string.Empty,
+                CorrelationId: actor.CorrelationId?.ToString() ?? string.Empty,
                 VerifiedAt: _clock.UtcNow), ct);
 
             return new OperationResultDto { Success = true, Code = "OK", Message = "Phone verified and updated." };

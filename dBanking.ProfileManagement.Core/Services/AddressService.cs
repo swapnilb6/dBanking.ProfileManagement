@@ -71,33 +71,31 @@ namespace dBanking.ProfileManagement.Core.Services
                 await _addresses.SetPrimaryAsync(request.CustomerId, entity.AddressId, ct);
 
             // Audit
-            await _audits.AddAsync(new AuditRecord
-            {
-                CustomerId = request.CustomerId,
-                Entity = "Address",
-                EntityId = entity.AddressId.ToString(),
-                Operation = "Upsert",
-                OldValueJson = JsonHelper.ToJson(null),
-                NewValueJson = JsonHelper.ToJson(entity),
-                ChangedFieldsCsv = "ALL",
-                ActorId = actor.ActorId,
-                ActorRole = actor.ActorRole,
-                SourceChannel = actor.SourceChannel,
-                ReasonCode = actor.Reason,
-                IpAddress = actor.IpAddress,
-                UserAgent = actor.UserAgent,
-                CorrelationId = actor.CorrelationId,
-                Timestamp = now
-            }, ct);
 
+            var audit = AuditFactory.CreateWithMeta(
+                customerId: request.CustomerId,
+                entityName: "Address",
+                entityId: entity.AddressId.ToString(),
+                action: "Upsert",
+                oldObject: null,                 // or the previous state if you fetched it
+                newObject: entity,
+                changedFieldsCsv: "ALL",          // or a computed diff list
+                actor: actor,
+                now: now,
+                embedMeta: true                  // include Reason/IP/UA inside NewJson._meta
+            );
+
+
+            await _audits.AddAsync(audit, ct);
             await _uow.SaveChangesAsync(ct);
 
+           
             // Event
             await _events.PublishAsync(new ProfileAddressUpdated(
                 CustomerId: request.CustomerId,
                 AddressId: entity.AddressId,
                 AddressType: entity.AddressType.ToString(),
-                CorrelationId: actor.CorrelationId ?? string.Empty,
+                CorrelationId: actor.CorrelationId ?? Guid.Empty,
                 EffectiveFrom: entity.EffectiveFrom
             ), ct);
 
@@ -149,24 +147,24 @@ namespace dBanking.ProfileManagement.Core.Services
 
             var changedCsv = DiffHelper.ChangedFieldsCsv(before, existing, nameof(Address.CreatedAt), nameof(Address.UpdatedAt));
 
-            await _audits.AddAsync(new AuditRecord
-            {
-                CustomerId = request.CustomerId,
-                Entity = "Address",
-                EntityId = existing.AddressId.ToString(),
-                Operation = "Update",
-                OldValueJson = JsonHelper.ToJson(before),
-                NewValueJson = JsonHelper.ToJson(existing),
-                ChangedFieldsCsv = string.IsNullOrWhiteSpace(changedCsv) ? "NONE" : changedCsv,
-                ActorId = actor.ActorId,
-                ActorRole = actor.ActorRole,
-                SourceChannel = actor.SourceChannel,
-                ReasonCode = actor.Reason,
-                IpAddress = actor.IpAddress,
-                UserAgent = actor.UserAgent,
-                CorrelationId = actor.CorrelationId,
-                Timestamp = _clock.UtcNow
-            }, ct);
+
+            var now = _clock.UtcNow; // or DateTimeOffset.UtcNow
+
+            var audit = AuditFactory.CreateWithMeta(
+                customerId: request.CustomerId,
+                entityName: "Address",
+                entityId: existing.AddressId.ToString(),
+                action: "Upsert",
+                oldObject: null,                 // or the previous state if you fetched it
+                newObject: existing,
+                changedFieldsCsv: "ALL",          // or a computed diff list
+                actor: actor,
+                now: now,
+                embedMeta: true                  // include Reason/IP/UA inside NewJson._meta
+            );
+
+            await _audits.AddAsync(audit, ct);
+
 
             await _uow.SaveChangesAsync(ct);
 
@@ -174,7 +172,7 @@ namespace dBanking.ProfileManagement.Core.Services
                 CustomerId: request.CustomerId,
                 AddressId: existing.AddressId,
                 AddressType: existing.AddressType.ToString(),
-                CorrelationId: actor.CorrelationId ?? string.Empty,
+                CorrelationId: actor.CorrelationId ?? Guid.Empty,
                 EffectiveFrom: existing.EffectiveFrom
             ), ct);
 
@@ -184,25 +182,24 @@ namespace dBanking.ProfileManagement.Core.Services
         public async Task<OperationResultDto> SetPrimaryAsync(Guid customerId, Guid addressId, ActorContext actor, CancellationToken ct)
         {
             await _addresses.SetPrimaryAsync(customerId, addressId, ct);
+            var now = _clock.UtcNow; // or DateTimeOffset.UtcNow
 
-            await _audits.AddAsync(new AuditRecord
-            {
-                CustomerId = customerId,
-                Entity = "Address",
-                EntityId = addressId.ToString(),
-                Operation = "SetPrimary",
-                OldValueJson = JsonHelper.ToJson(new { }),
-                NewValueJson = JsonHelper.ToJson(new { IsPrimary = true }),
-                ChangedFieldsCsv = "IsPrimary",
-                ActorId = actor.ActorId,
-                ActorRole = actor.ActorRole,
-                SourceChannel = actor.SourceChannel,
-                ReasonCode = actor.Reason,
-                IpAddress = actor.IpAddress,
-                UserAgent = actor.UserAgent,
-                CorrelationId = actor.CorrelationId,
-                Timestamp = _clock.UtcNow
-            }, ct);
+            var audit = AuditFactory.CreateWithMeta(
+                customerId: customerId,
+                entityName: "Address",
+                entityId: addressId.ToString(),
+                action: "SetPrimary",
+                oldObject: null,                 // or the previous state if you fetched it
+                newObject: JsonHelper.ToJson(new { IsPrimary = true }),
+                changedFieldsCsv: "IsPrimary",          // or a computed diff list
+                actor: actor,
+                now: now,
+                embedMeta: true                  // include Reason/IP/UA inside NewJson._meta
+            );
+
+            await _audits.AddAsync(audit, ct);
+
+
 
             await _uow.SaveChangesAsync(ct);
 

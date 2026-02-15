@@ -30,10 +30,10 @@ namespace dBanking.ProfileManagement.API.Tests
                 SmsEnabled = true,
                 EmailEnabled = true,
                 PushEnabled = false,
-                RegulatoryConsentGiven = true,
+                RegulatoryConsent = true,
                 Language = "en-IN",
                 TimeZone = "Asia/Kolkata",
-                UpdatedAt = DateTimeOffset.UtcNow
+                PreferencesUpdatedAt = DateTimeOffset.UtcNow
             };
 
             _factory.PreferenceServiceMock
@@ -62,7 +62,7 @@ namespace dBanking.ProfileManagement.API.Tests
                 CorrelationId = "cid-2"
             };
 
-            var ret = new PreferencesDto { SmsEnabled = true, EmailEnabled = false, PushEnabled = false, RegulatoryConsentGiven = false, UpdatedAt = DateTimeOffset.UtcNow };
+            var ret = new PreferencesDto { SmsEnabled = true, EmailEnabled = false, PushEnabled = false, RegulatoryConsent = false, PreferencesUpdatedAt = DateTimeOffset.UtcNow };
 
             _factory.PreferenceServiceMock
                 .Setup(s => s.UpdateAsync(input, It.IsAny<Core.Entities.ActorContext>(), It.IsAny<CancellationToken>()))

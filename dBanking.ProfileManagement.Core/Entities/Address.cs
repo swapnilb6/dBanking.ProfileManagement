@@ -12,9 +12,11 @@ namespace dBanking.ProfileManagement.Core.Entities
         public Guid AddressId { get; set; }         // public id
         public Guid CustomerId { get; set; }        // FK -> Profile.CustomerId
 
+        public AddressType AddressType { get; set; } = default!;
         public string Type { get; set; } = "Residential";
         public string Line1 { get; set; } = default!;
         public string? Line2 { get; set; }
+        public string? Line3 { get; set; }
         public string City { get; set; } = default!;
         public string? StateProvince { get; set; }
         public string? PostalCode { get; set; }

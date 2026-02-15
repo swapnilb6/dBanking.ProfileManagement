@@ -27,7 +27,7 @@ namespace dBanking.ProfileManagement.Core.Services
         }
 
         public async Task<(Guid VerificationId, string RawTokenOrOtp)> CreateAsync(
-            Guid customerId, string channelValue, string type, string? correlationId, int ttlMinutes, CancellationToken ct)
+            Guid customerId, string channelValue, string type, Guid? correlationId, int ttlMinutes, CancellationToken ct)
         {
             var vType = type.Equals("EmailLink", StringComparison.OrdinalIgnoreCase)
                         ? VerificationType.EmailLink
@@ -58,7 +58,7 @@ namespace dBanking.ProfileManagement.Core.Services
             {
                 VerificationId = Guid.NewGuid(),
                 CustomerId = customerId,
-                Type = vType,
+                //Type = vType,
                 ChannelValue = channelValue,
                 TokenHash = Sha256(secret),
                 Status = VerificationStatus.Pending,
@@ -137,6 +137,11 @@ namespace dBanking.ProfileManagement.Core.Services
             using var sha = SHA256.Create();
             var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(input));
             return Convert.ToHexString(bytes);
+        }
+
+        public Task<(Guid VerificationId, string RawTokenOrOtp)> CreateAsync(Guid customerId, string channelValue, string type, string? correlationId, int ttlMinutes, CancellationToken ct)
+        {
+            throw new NotImplementedException();
         }
     }
 }

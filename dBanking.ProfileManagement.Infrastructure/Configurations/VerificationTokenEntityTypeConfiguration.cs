@@ -52,7 +52,7 @@ namespace dBanking.ProfileManagement.Infrastructure.DbContext.Configurations
                     ExpiresAt = now.AddDays(1),
                     AttemptCount = 0,
                     MaxAttempts = 5,
-                    CorrelationId = "corr-verify-swapnil-001",
+                    CorrelationId = new Guid("corr-verify-swapnil-001"),
                     CreatedAt = now,
                     VerifiedAt = null,
                     FailureReason = null
@@ -69,7 +69,7 @@ namespace dBanking.ProfileManagement.Infrastructure.DbContext.Configurations
                     ExpiresAt = now.AddHours(2),
                     AttemptCount = 1,
                     MaxAttempts = 5,
-                    CorrelationId = "corr-reset-isha-001",
+                    CorrelationId = new Guid("corr-reset-isha-001"),
                     CreatedAt = now,
                     VerifiedAt = null,
                     FailureReason = null
@@ -86,7 +86,7 @@ namespace dBanking.ProfileManagement.Infrastructure.DbContext.Configurations
                     ExpiresAt = now.AddDays(1),
                     AttemptCount = 0,
                     MaxAttempts = 5,
-                    CorrelationId = "corr-verify-rahul-001",
+                    CorrelationId = new Guid("corr-verify-rahul-001"),
                     CreatedAt = now,
                     VerifiedAt = null,
                     FailureReason = null

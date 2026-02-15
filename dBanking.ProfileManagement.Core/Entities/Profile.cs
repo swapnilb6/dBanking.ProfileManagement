@@ -35,5 +35,11 @@ namespace dBanking.ProfileManagement.Core.Entities
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
 
+        public Contact? Contact { get; set; }
+
+        public Preferences? Preferences { get; set; }
+
+        public ICollection<Address> Addresses { get; } = new List<Address>(); // required for WithMany(p => p.Addresses)
+        public object RowVersion { get; set; }
     }
 }
