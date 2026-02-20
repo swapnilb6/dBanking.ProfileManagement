@@ -42,7 +42,7 @@ namespace dBanking.ProfileManagement.Infrastructure.DbContext.Configurations
             b.HasData(
                 new VerificationToken
                 {
-                    VerificationId = new Guid("AAAAAAA1-AAAA-AAAA-AAAA-AAAAAAAAAAA1"),
+                    VerificationId = new Guid("11111111-1111-1111-1111-111111111111"),
                     CustomerId = c1,
                     Type = VerificationType.EmailLink,
                     ChannelValue = "swapnil.bawankar@example.com",
@@ -52,14 +52,14 @@ namespace dBanking.ProfileManagement.Infrastructure.DbContext.Configurations
                     ExpiresAt = now.AddDays(1),
                     AttemptCount = 0,
                     MaxAttempts = 5,
-                    CorrelationId = new Guid("corr-verify-swapnil-001"),
+                    CorrelationId = new Guid("aaaaaaaa-bbbb-cccc-dddd-eeeeeeee0001"),
                     CreatedAt = now,
                     VerifiedAt = null,
                     FailureReason = null
                 },
                 new VerificationToken
                 {
-                    VerificationId = new Guid("AAAAAAA2-AAAA-AAAA-AAAA-AAAAAAAAAAA2"),
+                    VerificationId = new Guid("22222222-2222-2222-2222-222222222222"),
                     CustomerId = c2,
                     Type = VerificationType.SmsOtp,
                     ChannelValue = "+919822011122",
@@ -69,14 +69,14 @@ namespace dBanking.ProfileManagement.Infrastructure.DbContext.Configurations
                     ExpiresAt = now.AddHours(2),
                     AttemptCount = 1,
                     MaxAttempts = 5,
-                    CorrelationId = new Guid("corr-reset-isha-001"),
+                    CorrelationId = new Guid("aaaaaaaa-bbbb-cccc-dddd-eeeeeeee0002"),
                     CreatedAt = now,
                     VerifiedAt = null,
                     FailureReason = null
                 },
                 new VerificationToken
                 {
-                    VerificationId = new Guid("AAAAAAA3-AAAA-AAAA-AAAA-AAAAAAAAAAA3"),
+                    VerificationId = new Guid("33333333-3333-3333-3333-333333333333"),
                     CustomerId = c3,
                     Type = VerificationType.EmailLink,
                     ChannelValue = "rahul.kulkarni@example.com",
@@ -86,7 +86,7 @@ namespace dBanking.ProfileManagement.Infrastructure.DbContext.Configurations
                     ExpiresAt = now.AddDays(1),
                     AttemptCount = 0,
                     MaxAttempts = 5,
-                    CorrelationId = new Guid("corr-verify-rahul-001"),
+                    CorrelationId = new Guid("aaaaaaaa-bbbb-cccc-dddd-eeeeeeee0003"),
                     CreatedAt = now,
                     VerifiedAt = null,
                     FailureReason = null
