@@ -5,7 +5,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 ARG APP_UID=1000
 USER $APP_UID
 WORKDIR /app
-EXPOSE 9091	
+EXPOSE 9090
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
